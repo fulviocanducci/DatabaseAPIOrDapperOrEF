@@ -1,26 +1,24 @@
 # CslAppDatabase
 
-[Tradução em português do Brasil](README.PT-BR.md)
+## Visão Geral
 
-## Overview
+CslAppDatabase é um projeto de demonstração que apresenta três abordagens diferentes para conectividade de banco de dados em aplicações C# .NET. O projeto implementa uma arquitetura em camadas com três camadas distintas de acesso a dados:
 
-CslAppDatabase is a demonstration project showcasing three different approaches to database connectivity in C# .NET applications. The project implements a layered architecture with three distinct data access layers:
+1. **Camada API (DAL)** - ADO.NET bruto usando Microsoft.Data.SqlClient
+2. **Camada Dapper** - ORM leve usando Dapper
+3. **Camada Entity Framework** - ORM completo usando Entity Framework Core
 
-1. **API Layer (DAL)** - Raw ADO.NET using Microsoft.Data.SqlClient
-2. **Dapper Layer** - Lightweight ORM using Dapper
-3. **Entity Framework Layer** - Full-featured ORM using Entity Framework Core
+O projeto demonstra operações CRUD (Create, Read, Update, Delete) para uma entidade simples `People` em todas as três camadas, permitindo aos desenvolvedores comparar desempenho, complexidade e verbosidade de código entre diferentes abordagens de acesso a banco de dados.
 
-The project demonstrates CRUD operations (Create, Read, Update, Delete) for a simple `People` entity across all three layers, allowing developers to compare performance, complexity, and code verbosity between different database access approaches.
-
-## Architecture
+## Arquitetura
 
 ```
 ┌─────────────────┐
-│   Application   │
+│   Aplicação     │
 └─────────────────┘
          │
     ┌────┴────┐
-    │  Layers │
+    │ Camadas │
     └────┴────┘
          │
     ┌────┼────┐
@@ -28,62 +26,63 @@ The project demonstrates CRUD operations (Create, Read, Update, Delete) for a si
     └────┼────┘
          │
 ┌───────────────┐
-│   Database    │
+│   Banco de    │
+│   Dados       │
 │   (SQL Server)│
 └───────────────┘
 ```
 
-## Project Structure
+## Estrutura do Projeto
 
 ```
 CslAppDatabase/
-├── Program.cs              # Main application with test methods
+├── Program.cs              # Aplicação principal com métodos de teste
 ├── Models/
-│   └── People.cs           # Entity model and EF mapping
+│   └── People.cs           # Modelo de entidade e mapeamento EF
 ├── DAL/
-│   └── DalPeople.cs        # Raw ADO.NET implementation
+│   └── DalPeople.cs        # Implementação ADO.NET bruto
 ├── Dapper/
-│   └── DapperPeople.cs     # Dapper ORM implementation
+│   └── DapperPeople.cs     # Implementação ORM Dapper
 ├── EF/
-│   └── EFDatabase.cs       # Entity Framework DbContext
-└── CslAppDatabase.csproj   # Project configuration
+│   └── EFDatabase.cs       # DbContext do Entity Framework
+└── CslAppDatabase.csproj   # Configuração do projeto
 ```
 
-## Prerequisites
+## Pré-requisitos
 
-- **.NET 6.0 or later**
-- **SQL Server** (LocalDB, Express, or full instance)
-- **NuGet Packages:**
+- **.NET 6.0 ou posterior**
+- **SQL Server** (LocalDB, Express ou instância completa)
+- **Pacotes NuGet:**
   - `Microsoft.Data.SqlClient`
   - `Microsoft.EntityFrameworkCore.SqlServer`
   - `Dapper`
-  - `Bogus` (for test data generation)
+  - `Bogus` (para geração de dados de teste)
 
-## Setup
+## Configuração
 
-1. **Clone the repository:**
+1. **Clone o repositório:**
    ```bash
-   git clone <repository-url>
+   git clone <url-do-repositório>
    cd CslAppDatabase
    ```
 
-2. **Restore dependencies:**
+2. **Restaure as dependências:**
    ```bash
    dotnet restore
    ```
 
-3. **Database Configuration:**
-   - Update the connection string in `Program.cs` if needed
-   - Default connection: `Server=127.0.0.1;Database=Test;MultipleActiveResultSets=true;User Id=sa;Password=senha;Encrypt=False;`
+3. **Configuração do Banco de Dados:**
+   - Atualize a string de conexão em `Program.cs` se necessário
+   - Conexão padrão: `Server=127.0.0.1;Database=Test;MultipleActiveResultSets=true;User Id=sa;Password=senha;Encrypt=False;`
 
-4. **Run the application:**
+4. **Execute a aplicação:**
    ```bash
    dotnet run
    ```
 
-## Database Schema
+## Esquema do Banco de Dados
 
-The project uses a simple `People` table:
+O projeto usa uma tabela simples `People`:
 
 ```sql
 CREATE TABLE [dbo].[People](
@@ -94,19 +93,19 @@ CREATE TABLE [dbo].[People](
 ) ON [PRIMARY]
 ```
 
-## Data Access Layers
+## Camadas de Acesso a Dados
 
-### 1. API Layer (Raw ADO.NET)
+### 1. Camada API (ADO.NET Bruto)
 
-The API layer uses raw ADO.NET with `Microsoft.Data.SqlClient` for direct database operations. This approach provides maximum control but requires manual SQL writing and parameter handling.
+A camada API usa ADO.NET bruto com `Microsoft.Data.SqlClient` para operações diretas no banco de dados. Esta abordagem fornece controle máximo, mas requer escrita manual de SQL e manipulação de parâmetros.
 
-**Key Characteristics:**
-- Lowest level of abstraction
-- Maximum performance and control
-- Manual connection management
-- Verbose code for CRUD operations
+**Características Principais:**
+- Nível mais baixo de abstração
+- Máximo desempenho e controle
+- Gerenciamento manual de conexões
+- Código verboso para operações CRUD
 
-**CRUD Operations:**
+**Operações CRUD:**
 
 #### Insert
 ```csharp
@@ -136,7 +135,7 @@ public bool Edit(People model)
     strSql.Append("UPDATE People SET Name=@Name, Active=@Active WHERE Id=@Id");
     command.CommandType = System.Data.CommandType.Text;
     command.CommandText = strSql.ToString();
-    command.Parameters.Add("@Id", System.Data.SqlDbType.Int).Value = model.Id; // Fixed: was model.Name
+    command.Parameters.Add("@Id", System.Data.SqlDbType.Int).Value = model.Id; // Corrigido: era model.Name
     command.Parameters.Add("@Name", System.Data.SqlDbType.VarChar, 50).Value = model.Name;
     command.Parameters.Add("@Active", System.Data.SqlDbType.Bit).Value = model.Active;
     Connection.Open();
@@ -207,18 +206,18 @@ public bool Delete(int id)
 }
 ```
 
-### 2. Dapper Layer
+### 2. Camada Dapper
 
-The Dapper layer uses the Dapper micro-ORM, which extends `IDbConnection` with dynamic SQL execution methods. It provides object mapping with minimal overhead.
+A camada Dapper usa o micro-ORM Dapper, que estende `IDbConnection` com métodos de execução SQL dinâmica. Ele fornece mapeamento de objetos com sobrecarga mínima.
 
-**Key Characteristics:**
-- Lightweight ORM
-- SQL-first approach
-- Better performance than full ORMs
-- Less boilerplate than raw ADO.NET
-- Still requires SQL writing
+**Características Principais:**
+- ORM leve
+- Abordagem SQL-first
+- Melhor desempenho que ORMs completos
+- Menos boilerplate que ADO.NET bruto
+- Ainda requer escrita de SQL
 
-**CRUD Operations:**
+**Operações CRUD:**
 
 #### Insert
 ```csharp
@@ -272,19 +271,19 @@ public bool Delete(int id)
 }
 ```
 
-### 3. Entity Framework Layer
+### 3. Camada Entity Framework
 
-The Entity Framework layer uses EF Core, Microsoft's full-featured ORM. It provides high-level abstractions, change tracking, and LINQ support.
+A camada Entity Framework usa EF Core, o ORM completo da Microsoft. Ele fornece abstrações de alto nível, rastreamento de mudanças e suporte a LINQ.
 
-**Key Characteristics:**
-- Full-featured ORM
-- LINQ support
-- Automatic change tracking
-- Code-first or database-first approaches
-- Most abstracted layer
-- Rich ecosystem and tooling
+**Características Principais:**
+- ORM completo
+- Suporte a LINQ
+- Rastreamento automático de mudanças
+- Abordagens code-first ou database-first
+- Camada mais abstrata
+- Ecossistema e ferramentas ricos
 
-**CRUD Operations:**
+**Operações CRUD:**
 
 #### Insert
 ```csharp
@@ -302,13 +301,13 @@ static void TesteByEFClientInsert()
 
 #### Edit
 ```csharp
-// EF Edit operation (not shown in current code, but typically:)
+// Operação Edit do EF (não mostrada no código atual, mas tipicamente:)
 using (var context = new EFDatabase(options))
 {
     var person = context.People.Find(id);
     if (person != null)
     {
-        person.Name = "Updated Name";
+        person.Name = "Nome Atualizado";
         person.Active = true;
         context.SaveChanges();
     }
@@ -317,7 +316,7 @@ using (var context = new EFDatabase(options))
 
 #### Find
 ```csharp
-// EF Find operation (not shown in current code, but typically:)
+// Operação Find do EF (não mostrada no código atual, mas tipicamente:)
 using (var context = new EFDatabase(options))
 {
     var person = context.People.Find(id);
@@ -341,7 +340,7 @@ static void TesteByEFClientFindAll()
 
 #### Delete
 ```csharp
-// EF Delete operation (not shown in current code, but typically:)
+// Operação Delete do EF (não mostrada no código atual, mas tipicamente:)
 using (var context = new EFDatabase(options))
 {
     var person = context.People.Find(id);
@@ -353,48 +352,48 @@ using (var context = new EFDatabase(options))
 }
 ```
 
-## Usage
+## Uso
 
-The `Program.cs` file contains test methods for each layer. Uncomment the desired test method calls at the bottom of the file:
+O arquivo `Program.cs` contém métodos de teste para cada camada. Descomente as chamadas de método de teste desejadas no final do arquivo:
 
 ```csharp
-// Uncomment to run API layer tests
+// Descomente para executar testes da camada API
 // TesteByAPIMicrosoftDataSqlClientInsert();
 // TesteByAPIMicrosoftDataSqlClientFindAll();
 
-// Uncomment to run Dapper layer tests
+// Descomente para executar testes da camada Dapper
 // TesteByDapperClientInsert();
 // TesteByDapperClientFindAll();
 
-// Uncomment to run EF layer tests
+// Descomente para executar testes da camada EF
 // TesteByEFClientInsert();
 // TesteByEFClientFindAll();
 ```
 
-### Running Tests
+### Executando Testes
 
-1. **Create the database table:**
-   The `CreateTableTest()` method will automatically create the `People` table if it doesn't exist.
+1. **Crie a tabela do banco de dados:**
+   O método `CreateTableTest()` criará automaticamente a tabela `People` se ela não existir.
 
-2. **Run specific tests:**
-   - API Layer: `TesteByAPIMicrosoftDataSqlClientInsert()` / `TesteByAPIMicrosoftDataSqlClientFindAll()`
-   - Dapper Layer: `TesteByDapperClientInsert()` / `TesteByDapperClientFindAll()`
-   - EF Layer: `TesteByEFClientInsert()` / `TesteByEFClientFindAll()`
+2. **Execute testes específicos:**
+   - Camada API: `TesteByAPIMicrosoftDataSqlClientInsert()` / `TesteByAPIMicrosoftDataSqlClientFindAll()`
+   - Camada Dapper: `TesteByDapperClientInsert()` / `TesteByDapperClientFindAll()`
+   - Camada EF: `TesteByEFClientInsert()` / `TesteByEFClientFindAll()`
 
-## Performance Comparison
+## Comparação de Desempenho
 
-- **API (Raw ADO.NET)**: Fastest performance, most control, highest code verbosity
-- **Dapper**: Excellent performance with minimal overhead, balanced code complexity
-- **Entity Framework**: Rich features and abstractions, slightly slower due to change tracking
+- **API (ADO.NET Bruto)**: Desempenho mais rápido, mais controle, maior verbosidade de código
+- **Dapper**: Excelente desempenho com sobrecarga mínima, complexidade de código equilibrada
+- **Entity Framework**: Recursos ricos e abstrações, ligeiramente mais lento devido ao rastreamento de mudanças
 
-Choose the appropriate layer based on your project requirements:
-- Use **API** for maximum performance and control
-- Use **Dapper** for a good balance of performance and developer productivity
-- Use **EF** for complex applications requiring advanced ORM features
+Escolha a camada apropriada baseada nos requisitos do seu projeto:
+- Use **API** para máximo desempenho e controle
+- Use **Dapper** para um bom equilíbrio entre desempenho e produtividade do desenvolvedor
+- Use **EF** para aplicações complexas que requerem recursos avançados de ORM
 
-## Dependencies
+## Dependências
 
-- `Microsoft.Data.SqlClient` - ADO.NET data provider for SQL Server
-- `Microsoft.EntityFrameworkCore.SqlServer` - EF Core SQL Server provider
-- `Dapper` - Micro-ORM for .NET
-- `Bogus` - Fake data generator for testing
+- `Microsoft.Data.SqlClient` - Provedor de dados ADO.NET para SQL Server
+- `Microsoft.EntityFrameworkCore.SqlServer` - Provedor SQL Server do EF Core
+- `Dapper` - Micro-ORM para .NET
+- `Bogus` - Gerador de dados falsos para testes
